@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title> Form Manager </title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"> </script>
+    <script type="text/javascript" src="js/FormManager.js" ></script>
+    <script type="text/javascript">
+
+        function callback( value, type, name ){
+
+            $("div").append("value: " + value + " type: " + type + " name: " + name + "<br>");
+        }
+        var test = {};
+        test.form1 = {};
+        test.form = [];
+        test.form[ 0 ] = {};
+         test.form[ 0 ].text = {};
+        for(var k = 0; k < 4; k++ ){
+
+             test.form[ 0 ].text[k] = "text" + k;
+        }
+        test.form1.radio = "2";
+        test.form1.checkbox = true;
+        function onSubmit(){
+            $(this).fillForm( test, callback );
+            callback();
+ 
+            var elem = $(this).getForm( callback );
+            var a = 23+45;
+            return false;
+        }
+
+        function onLoad(){
+
+            $( "form" ).submit(onSubmit);
+        }
+    </script>
+</head>
+<body onload="onLoad();">
+    <form >
+        <input type="text" name="form.0.text.0" value="" /><br>
+        <input type="text" name="form.0.text.1" value="" /><br>
+        <input type="text" name="form.0.text.2" value="" /><br>
+        <input type="text" name="form.0.text.3" value="" /><br>
+
+        <input type="radio" name="form1.radio" value="1" />
+        <input type="radio" name="form1.radio" value="2" />
+        <input type="radio" name="form1.radio" value="3" /><br>
+        <input value="" name="form1.checkbox" type="checkbox" /><br>
+        <input value="Submit" name="" type="SUBMIT" />
+
+    </form>
+    <div></div>
+</body>
+</html>
