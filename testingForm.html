@@ -23,11 +23,9 @@
         test.form1.radio = "2";
         test.form1.checkbox = true;
         function onSubmit(){
-            $(this).fillForm( test, callback );
-            callback();
- 
-            var elem = $(this).getForm( callback );
-            var a = 23+45;
+            FormManager.setData( this, test);
+  
+            var elem = FormManager.getData( this );
             return false;
         }
 
