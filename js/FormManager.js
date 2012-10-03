@@ -1,144 +1,138 @@
-
-(function($) {
-     var rCRLF = /\r?\n/g,
-             COMMA = ",";
-
+var FormManager = new function(){
+   var me = this;
+    
     function hasElem( o ){
-
         for(var t in o ){
+            if( o.hasOwnProperty( t ) ){
+                return true;
+            }
+        }
+        return false;         
+    }
+    function getProperData(str){
+        if( str == 'false'){
+            return false;
+        }
+        else if( str == 'true' ){
             return true;
         }
-        return false;
-         
+        return str;
     }
-     function convertStringToObject() {
+    
+    function convertStringToObject() {
         var a = arguments, o = null, j, d;
         d = ("" + a[1]).split(".");
         o = a[0];
-
         for (j = 0; j < d.length - 1; j = j + 1) {
-
             if( !isNaN(d[ j + 1 ]) &&  !hasElem( o ) ){
-              o[d[j]] = o[d[j]] || [];
+                o[d[j]] = o[d[j]] || [];
             }else{
                 o[d[j]] = o[d[j]] || {};
             }
             o = o[d[j]];
         }
-        o[ d[ j ] ] = a[ 2 ];
+        o[ d[ j ] ] = getProperData(a[ 2 ]);
     }
-    function handleCondition( elem, type){
-
-          var elem = list[i];
-				    $(elem).bind("click", function() {
-					$(this).css("border", "1px solid #cccccc");
-				}).css("border", "1px solid red");
-    }
+    
     function isAddable(){
         return this.name && !this.disabled;
     }
 
-    function isConditionMet( conditions, value ){
-        for( var k in conditions ){
-            switch( conditions[k] ){
-                case "mandatory" : {
-                    return !( !value );
-                }
+    function isConditionMet( value , hintText){
+        
+        var isMandatory = this.className.indexOf("mandatory") != -1;
+        if(this.jfm && typeof this.jfm.verify == 'function'){
+            this.jfm.verify(value);
+        }
+        if(isMandatory){
+            if( value !== "" && value !== hintText ){
+                return true;
+            }
+            else{
+                return false;
             }
         }
+        
         return true;
     }
+    
     function getAttribute(){
-
-        return this.getAttribute( "fm" )? this.getAttribute( "fm" ) : "";
+        return 
     }
 
     function getData( elem, callback){
-
-            if( !isAddable.call( elem ) ){
-                return {};
-            }
-        
-            var fm = getAttribute.call(elem).split( COMMA );
-            var value = elem.value;
-            if( !isConditionMet.call( elem, fm, value ) ){
-                return {};
-            }
-           var ret = convertStringToObject( this, $.trim(elem.name),  $.trim( elem.value ) );
-        callback.call( elem, elem.value, elem.type, elem.name );
+        if( !isAddable.call( elem ) ){
+            return ;
+        }
+     
+        var value = elem.value;
+        var hintText = elem.getAttribute("hintText");
+        if( !isConditionMet.call( elem, value, hintText ) ){
+            throw "Mandatory fields can not be empty";
+        }
+        if(value == hintText){
+            value= "";
+        }
+        convertStringToObject( this, elem.name,   value );
+        callback.call( elem, value, elem.type, elem.name );
     }
-	$.fn.getForm = function( cb ) {
-        var callback = cb ? cb : function(){};
-        var ret = {};
-        var elems = $(this)[0];
-		for ( var i = 0, len = elems.length; i < len; i++ ) {
-            getData.call( ret, elems[i], callback);
-        }
+    
+    this.getData = function (self, cb) {
+        var callback = typeof cb == "function" ? cb : function () { },
+        ret = {};       
+        for ( var i = 0, len = self.length; i < len; i++ ) {
+            getData.call( ret, self[i], callback);
+        }       
         return ret;
-	};
-	
-
-	$.fn.fillForm = function( fields, cb ) {
-
-        var callback = cb ? cb : function(){};
-		if (!fields){
-            return false;
-        }
-		var self =  $(this)[0];
-		for ( var k in fields) {
-			fillThisField( fields[k], k );
-		}
-        
-		function fillThisField( field, index ) {
-            
-            switch( typeof field ){
-                case "object":{
-                    for ( var i in field) {
-                        fillThisField( field[i], index + "." + i );
-                    }
-                     break;
-                }
-                
-                case "function":{
-                    break;
-                }
-                default:{
-                     var elem = self[index];
-                    if( elem ){
-                        assignValue.call( elem, field );
+    };
+    
+    function assignValue( value ){
+        switch( this.type ){
+            case "checkbox":{
+                this.checked = value;
+                break;
+            }
+            case undefined :{
+                if( typeof this  == "object" ){
+                    for ( var key = 0; key < this.length; key++) {
+                        if(this[key].value == (value+"")){
+                            this[key].checked = true;                              
+                        }else{
+                            this[key].checked = false; 
+                        }
                     }
                 }
+                break;
+            }
+            default :{
+                this.value = value;
             }
         }
-        function assignValue( value ){
-
-            switch( this.type ){
-
-                case "checkbox":{
-
-                    this.checked = value;
-                    callback.call( this, value, this.type,  this.name );
-                    break;
+    }
+    
+    function setData( field, index ) {
+        switch( typeof field ){
+            case "object":{
+                for ( var i in field) {
+                    setData.call(this, field[i], index + "." + i );
                 }
-                case undefined :{
-                    if( typeof this  == "object" ){
-                        for ( var key = 0; key < this.length; key++) {
-                            if( this[key].value == value ){
-                                this[key].checked = true;
-                                callback.call( this[key], value, this[key].type,  this[key].name );
-                            }
-							else{
-                                this[key].checked = false ;
-                            }
-					    }
-                    }
-                    break;
-                }
-                default :{
-                    this.value = value;
-                    callback.call( this, value, this.type, this.name );
-                }
+                break;
             }
-		}
-	};
-})(jQuery);
+            case "function":{
+                break;
+            }
+            default:{
+                this[index] && assignValue.call( this[index], field );
+            }
+        }
+    }
+    
+    this.setData = function ( self, fields, cb) {
+        if (!fields){
+            return;
+        }
+        for ( var k in fields) {
+            fields.hasOwnProperty(k) && setData.call(self, fields[k], k );
+        }
+    };
+};
